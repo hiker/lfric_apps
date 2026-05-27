@@ -68,8 +68,7 @@ class LFRicAppsBase(LFRicBase):
         #       will allow us to use:
         # self.add_python_path(apps_root / "interfaces" /
         self._add_python_paths.append(
-            apps_root / "interfaces" / "physics_schemes_interface" /
-            "build" / "transmute_psytrans")
+            str(apps_root / "interfaces" / "build"))
 
     def define_command_line_options(
             self,

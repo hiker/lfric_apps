@@ -159,9 +159,9 @@ class FabLFRicAtm(LFRicAppsBase):
 
         this_file = Path(__file__).resolve()
         self._this_root = this_file.parent
-        self._lfric_apps_root = this_file.parents[2]
+        self._lfric_app_root = this_file.parents[2]
         super().__init__(name=name,
-                         apps_dir=self._this_root,
+                         app_dir=self._this_root,
                          root_symbol=root_symbol)
         # Store the root of this apps for later
 
@@ -244,7 +244,7 @@ class FabLFRicAtm(LFRicAppsBase):
                 ]
         for directory in dirs:
             grab_folder(self.config,
-                        src=self._lfric_apps_root / directory,
+                        src=self._lfric_app_root / directory,
                         dst_label='')
 
         gr = GetRevision("../../dependencies.yaml")
@@ -286,15 +286,15 @@ class FabLFRicAtm(LFRicAppsBase):
         Based on $LFRIC_APPS_ROOT/build/extract/extract.cfg.
         """
 
-        extract_list = [ExtractList(self._lfric_apps_root / "build" /
+        extract_list = [ExtractList(self._lfric_app_root / "build" /
                                     "extract" / "extract.yaml")]
 
-        socrates_extract_cfg = (self._lfric_apps_root / "interfaces" /
+        socrates_extract_cfg = (self._lfric_app_root / "interfaces" /
                                 "socrates_interface" / "build" /
                                 "extract.yaml")
         extract_list.append(ExtractList(socrates_extract_cfg))
 
-        jules_extract_cfg = (self._lfric_apps_root / "interfaces" /
+        jules_extract_cfg = (self._lfric_app_root / "interfaces" /
                              "jules_interface" / "build" /
                              "extract.yaml")
         extract_list.append(ExtractList(jules_extract_cfg))
@@ -364,10 +364,14 @@ class FabLFRicAtm(LFRicAppsBase):
 
     def psyclone_step(
             self,
-            ignore_dependencies: Optional[Iterable[str]] = None) -> None:
+            ignore_dependencies: Optional[Iterable[str]] = None,
+            kernel_roots: Optional[list[Path]] = None) -> None:
+
+        kernel_roots = kernel_roots or []
         super().psyclone_step(
             ignore_dependencies=ignore_dependencies,
-            additional_parameters=["-d", self.config.build_output])
+            #kernel_roots=kernel_roots+ [self.config.build_output])
+            kernel_roots=kernel_roots)
 
 
 # -----------------------------------------------------------------------------
