@@ -112,4 +112,5 @@ transmute_after_dsl:
     /ukca_chemistry_ctl_full_mod
     /ukca_main1-ukca_main1
 
-  noscript.py: ukca_abdulrazzak_ghan
+  no_script:
+    /ukca_abdulrazzak_ghan
