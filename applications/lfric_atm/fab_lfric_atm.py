@@ -252,16 +252,12 @@ class FabLFRicAtm(LFRicAppsBase):
         self.site_config.update_repos(dep_infos)
 
         for repo in dep_infos.get_repo_names():
-            if repo == "lfric_apps":
-                # For now don't support checking out the apps repo
+            if repo in ["lfric_apps", "lfric_core", "SimSys_Scripts"]:
+                # For now don't support checking out the apps or core repo
+                # (they must be already checked out), and ignore the
+                # SimSys_sripts repository, which is not needed.
                 continue
-            if repo == "lfric_core":
-                # We don't support checking out lfric core, it will
-                # be taken from an already checked out directory
-                continue
-            if repo == "SimSys_Scripts":
-                # We don't need the SimSys scripts, so ignore
-                continue
+
             repo_infos = dep_infos.get_repo_info(repo)
 
             for repo_info in repo_infos:
