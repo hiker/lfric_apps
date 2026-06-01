@@ -24,7 +24,7 @@ from lfric_apps_base import LFRicAppsBase  # noqa: E402
 
 # These can only be done after the import of LFRicAppBase (which adds
 # the required directories from the core repo)
-from get_revision import GetRevision  # noqa: E402
+from dependency_info import DependencyInfo  # noqa: E402
 from extract_list import ExtractList  # noqa: E402
 
 
@@ -247,9 +247,11 @@ class FabLFRicAtm(LFRicAppsBase):
                         src=self._lfric_app_root / directory,
                         dst_label='')
 
-        gr = GetRevision("../../dependencies.yaml")
-        #for repo in gr.get_repo_names():
-        for repo in []:
+        dep_infos = DependencyInfo(self._lfric_app_root / "dependencies.yaml")
+        # Call site-specific updates, which allows usage of mirrors.
+        self.site_config.update_repos(dep_infos)
+
+        for repo in dep_infos.get_repo_names():
             if repo == "lfric_apps":
                 # For now don't support checking out the apps repo
                 continue
@@ -257,7 +259,10 @@ class FabLFRicAtm(LFRicAppsBase):
                 # We don't support checking out lfric core, it will
                 # be taken from an already checked out directory
                 continue
-            repo_infos = gr.get_repo_info(repo)
+            if repo == "SimSys_Scripts":
+                # We don't need the SimSys scripts, so ignore
+                continue
+            repo_infos = dep_infos.get_repo_info(repo)
 
             for repo_info in repo_infos:
                 logger.info(f"Extracting '{repo}' from '{repo_info.source}' "
@@ -360,18 +365,6 @@ class FabLFRicAtm(LFRicAppsBase):
             new_path_flags.extend(path_flags)
         super().compile_fortran_step(common_flags=common_flags,
                                      path_flags=new_path_flags)
-
-
-    def psyclone_step(
-            self,
-            ignore_dependencies: Optional[Iterable[str]] = None,
-            kernel_roots: Optional[list[Path]] = None) -> None:
-
-        kernel_roots = kernel_roots or []
-        super().psyclone_step(
-            ignore_dependencies=ignore_dependencies,
-            #kernel_roots=kernel_roots+ [self.config.build_output])
-            kernel_roots=kernel_roots)
 
 
 # -----------------------------------------------------------------------------

@@ -6,20 +6,67 @@
 ##############################################################################
 
 '''
-This module contains a function that extracts the revision numbers
-from a dependencies.yaml file.
+This module contains a class that manages the dependencies specified in
+a dependencies.yaml file.
 '''
-from collections import namedtuple
+
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Union
 import yaml
 
 
-# A namedtuple to keep track of repository source and references
-RepoInfo = namedtuple("RepoInfo", ["source", "ref"])
+@dataclass
+class RepoInfo:
+    """
+    A simple class to maintain source and ref attributes of a repository.
+    It maintains a list of sources and references, the idea being that the
+    first one is checked out, then the following are merged into the checked
+    out version.
+
+    This data is maintained in source_ref, a list of SourceRef instances.
+
+    Each RepoInfo also maintains one path, the location in which the source
+    code is checked out to.
+    """
+
+    @dataclass
+    class SourceRef:
+        """
+        A simple data class that stores a source and ref, and allows
+        to access and update them individually.
+        """
+        source: str
+        ref: str
+
+    # The URL and reference of all sources
+    source_ref: list[SourceRef] = field(default_factory=list)
+
+    # The location on the file system where the checked out files are stored.
+    # Provide a default, this will be filled in later by the build script
+    # with the absolute path of the checked out version.
+    path: Path = Path(".")
+
+    def append(self, source: str, ref: str) -> None:
+        """
+        Provide a simple append function, to add a source and reference.
+
+        :param source: the source to add.
+        :param ref: the reference to use in this source
+        """
+        self.source_ref.append(RepoInfo.SourceRef(source, ref))
+
+    def __iter__(self) -> SourceRef:
+        """
+        This function allows to iterate over all sources/references
+        of this dependency.
+        """
+        for item in self.source_ref:
+            yield item
 
 
-class GetRevision:
+# ============================================================================
+class DependencyInfo(dict):
     '''
     A simple dictionary-like class that stores the version information
     from a yaml file:
@@ -30,7 +77,7 @@ class GetRevision:
         ...
 
     The information can be accessed as a dictionary, e.g.:
-        gr = GetRevision("$LFRIC_APPS_SRC/dependencies.yaml")
+        gr = DependencyUnfi("$LFRIC_APPS_SRC/dependencies.yaml")
         gr["casim"] --> {"source": "git@.../casim.git",
                          "ref": "2025.12.1"}
 
@@ -44,7 +91,7 @@ class GetRevision:
     '''
 
     def __init__(self, filename: Union[str, Path]) -> None:
-        self._repo_info: dict[str, list[RepoInfo]] = {}
+        super().__init__()
 
         with open(filename, "r", encoding="utf8") as stream:
             dependencies = yaml.safe_load(stream)
@@ -55,7 +102,7 @@ class GetRevision:
             if not isinstance(all_deps, list):
                 all_deps = [all_deps]
 
-            self._repo_info[repo] = []
+            self[repo] = RepoInfo()
             for dep in all_deps:
                 if "source" not in dep:
                     raise RuntimeError(f"'{filename} does not contain a "
@@ -64,19 +111,18 @@ class GetRevision:
                 if "ref" not in dep:
                     raise RuntimeError(f"'{filename} does not contain a "
                                        f"'ref' definition for repo '{repo}'.")
-                self._repo_info[repo].append(RepoInfo(dep["source"],
-                                                      dep["ref"]))
+                self[repo].append(dep["source"], dep["ref"])
 
     def get_repo_names(self) -> list[str]:
         """
         :returns: the list of all repositories stored in this object.
         """
-        return list(self._repo_info.keys())
+        return list(self.keys())
 
-    def get_repo_info(self, repo: str) -> list[RepoInfo]:
+    def get_repo_info(self, repo: str) -> RepoInfo:
         """
         :returns: the list of repository infos for a given dependency.
 
         :raises:KeyError if the repository is not defined.
         """
-        return self._repo_info[repo]
+        return self[repo]
