@@ -57,8 +57,7 @@ class LFRicAppsBase(LFRicBase):
                  app_dir: Path,
                  root_symbol: Optional[Union[list[str], str]] = None
                  ):
-        apps_root = Path(__file__).parents[1]
-        print("lfricappsbase", apps_root)
+        self._lfric_apps_root = Path(__file__).resolve().parents[1]
         super().__init__(name=name, app_dir=app_dir,
                          root_symbol=root_symbol)
 
@@ -66,9 +65,16 @@ class LFRicAppsBase(LFRicBase):
         # this path.
         # TODO: until we upgrade lfric_core with a new version which
         #       will allow us to use:
-        # self.add_python_path(apps_root / "interfaces" /
+        # self.add_python_path(self.lfric_apps_root / "interfaces" /
         self._add_python_paths.append(
-            str(apps_root / "interfaces" / "build"))
+            str(self.lfric_apps_root / "interfaces" / "build"))
+
+    @property
+    def lfric_apps_root(self) -> Path:
+        """
+        :returns: the path to the application root.
+        """
+        return self._lfric_apps_root
 
     def define_command_line_options(
             self,

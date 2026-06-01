@@ -14,8 +14,8 @@ from pathlib import Path
 import sys
 from typing import cast, Iterable, List, Optional, Union
 
-from fab.api import (AddFlags, Category, Compiler, Exclude, git_checkout,
-                     grab_folder, Include)
+from fab.api import (AddFlags, Category, Compiler, Exclude, grab_folder,
+                     Include)
 
 # We need to import the Apps base class:
 sys.path.insert(0, str(Path(__file__).parents[2] / "build"))
@@ -24,7 +24,6 @@ from lfric_apps_base import LFRicAppsBase  # noqa: E402
 
 # These can only be done after the import of LFRicAppBase (which adds
 # the required directories from the core repo)
-from dependency_info import DependencyInfo  # noqa: E402
 from extract_list import ExtractList  # noqa: E402
 
 
@@ -227,6 +226,14 @@ class FabLFRicAtm(LFRicAppsBase):
         libs = ['shumlib', ]
         return libs + super().get_linker_flags()
 
+    def get_dependencies_file(self) -> Path:
+        """
+        LFRic_atm needs the repos from the dependencies.yaml file to use:
+
+        :returns: the path to the dependencies.yaml file to use
+        """
+        return self.lfric_apps_root / "dependencies.yaml"
+
     def grab_files_step(self) -> None:
         """
         This method overwrites the base class grab_files_step. It includes
@@ -246,38 +253,6 @@ class FabLFRicAtm(LFRicAppsBase):
             grab_folder(self.config,
                         src=self._lfric_app_root / directory,
                         dst_label='')
-
-        dep_infos = DependencyInfo(self._lfric_app_root / "dependencies.yaml")
-        # Call site-specific updates, which allows usage of mirrors.
-        self.site_config.update_repos(dep_infos)
-
-        for repo in dep_infos.get_repo_names():
-            if repo in ["lfric_apps", "lfric_core", "SimSys_Scripts"]:
-                # For now don't support checking out the apps or core repo
-                # (they must be already checked out), and ignore the
-                # SimSys_sripts repository, which is not needed.
-                continue
-
-            repo_infos = dep_infos.get_repo_info(repo)
-
-            for repo_info in repo_infos:
-                logger.info(f"Extracting '{repo}' from '{repo_info.source}' "
-                            f" to 'science/{repo}', "
-                            f"revisions {repo_info.ref}")
-                try:
-                    git_checkout(self.config,
-                                 repo_info.source,
-                                 dst_label=f'science/{repo}',
-                                 revision=repo_info.ref)
-                except RuntimeError as error:
-                    logger.error(f"Cannot checkout '{repo}' from "
-                                 f"'{repo_info.source}' revision "
-                                 f"'{repo_info.ref}': {error}. ")
-                    sys.exit(-1)
-
-        # Copy the optimisation scripts into a separate directory
-        grab_folder(self.config, src=self._this_root / 'optimisation',
-                    dst_label='optimisation')
 
     def find_source_files_step(
             self,

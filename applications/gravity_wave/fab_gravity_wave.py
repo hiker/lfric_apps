@@ -47,7 +47,7 @@ class FabGravityWave(PfUnitMixin, LFRicAppsBase):
 
     def grab_files_step(self) -> None:
         """
-        Grabs the required source files and optimisation scripts.
+        Grabs the required source files.
         """
         super().grab_files_step()
         dirs = ['applications/gravity_wave/source/',
@@ -59,10 +59,6 @@ class FabGravityWave(PfUnitMixin, LFRicAppsBase):
         lfric_apps_root = self._this_root.parents[1]
         for dir in dirs:
             grab_folder(self.config, src=lfric_apps_root / dir, dst_label='')
-
-        # Copy the optimisation scripts into a separate directory
-        grab_folder(self.config, src=self._this_root / "optimisation",
-                    dst_label='optimisation')
 
     def get_rose_meta(self) -> Path:
         """
