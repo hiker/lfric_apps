@@ -12,10 +12,10 @@ contained in the infrastructure directory.
 import logging
 from pathlib import Path
 import sys
-from typing import cast, Iterable, List, Optional, Union
+from typing import cast, Iterable, List, Optional, Tuple, Union
 
-from fab.api import (AddFlags, Category, Compiler, Exclude, grab_folder,
-                     Include)
+from fab.api import (AddFlags, Category, Compiler, Exclude, git_checkout,
+                     grab_folder, Include)
 
 # We need to import the Apps base class:
 sys.path.insert(0, str(Path(__file__).parents[2] / "build"))
@@ -24,6 +24,7 @@ from lfric_apps_base import LFRicAppsBase  # noqa: E402
 
 # These can only be done after the import of LFRicAppBase (which adds
 # the required directories from the core repo)
+from dependency_info import DependencyInfo  # noqa: E402
 from extract_list import ExtractList  # noqa: E402
 
 
@@ -226,13 +227,18 @@ class FabLFRicAtm(LFRicAppsBase):
         libs = ['shumlib', ]
         return libs + super().get_linker_flags()
 
-    def get_dependencies_file(self) -> Path:
+    def get_dependencies_info(self) -> Tuple[Optional[Path], list[str]]:
         """
-        LFRic_atm needs the repos from the dependencies.yaml file to use:
+        LFRic_atm needs all repos from dependencies.yaml, so return []
+        as second parameter, which indicated not to filter out any
+        repositories.
 
-        :returns: the path to the dependencies.yaml file to use
+        :returns: the path to the dependencies.yaml file to use and a list
+            of repositories to extract.
+
         """
-        return self.lfric_apps_root / "dependencies.yaml"
+        return self.lfric_apps_root / "dependencies.yaml", []
+
 
     def grab_files_step(self) -> None:
         """

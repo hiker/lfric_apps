@@ -140,8 +140,8 @@ class LFRicAppsBase(LFRicBase):
 
         if "jules" in self.dependency_info.get_repo_names():
             # In general, jules should not be compiled for most applications
-            # # (it needs very specific exclude/include specifications), since
-            # most applications don't need it. So, we ignore science/jules.
+            # (it needs very specific exclude/include specifications), since
+            # they don't need it. So, we ignore science/jules.
             # The exclude is inserted at the beginning, to allow e.g.
             # lfric_atm to add its own Include to overwrite the exclude
             # (last entry takes precedence in case of same length)

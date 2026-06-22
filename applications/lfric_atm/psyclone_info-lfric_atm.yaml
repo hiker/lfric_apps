@@ -22,8 +22,6 @@ phases:
 # Each section contains:
 # - a comment (to be logged during execution),
 # - PSyclone API (to select DSL or transmute).
-# - artefacts: specifying which artefact set (Fab term for list of files)
-#   to run this phase on (e.g. all x90 files, all f90 files, ...).
 # - script_dir:  subdirectory (under optimisation/SITE) to find the scripts
 #   (atm transmute, psykal - but different names could be used).
 #
@@ -46,16 +44,12 @@ dsl:
   comment: "PSylone DSL Phase"
   api: lfric
 
-  # Run on all x90 files
-  artefacts: x90
-
   script_dir: psykal
 
   # The first two directives reproduce the default PSyclone triggering used
   # in LFRic:
 
-  # Run optimisation/.../global.py on all x90 files (x90 because this is
-  # the dsl section, as specified in the artefacts above)
+  # Run optimisation/.../global.py on all x90 files
   global.py: \*
 
   # This represents existing functionality: if there is a file-specific .py
@@ -76,9 +70,6 @@ transmute_after_dsl:
   comment: "Post-DSL phase"
   api:
   script_dir: transmute
-
-  # Run on all f90 files
-  artefacts: f90
 
   global.py:
     mphys_kernel_mod
