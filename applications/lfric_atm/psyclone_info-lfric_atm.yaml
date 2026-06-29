@@ -5,40 +5,12 @@
 # First we specify the phases for PSyclone. This allows
 # any apps to run transmute and DSL steps in any order just by
 # changing (or supplying a different) psyclone-info file.
-# In this example, we run a transmute step before and after the DSL step.
-# This allows transforming source code before PSyclone runs its DSL
-# processing (during which transformed source code might be inlined).
-# The third step is done to support feedback from the DSL processing
-# to trigger additional processing (for example, if the DSL processing
-# adds OpenACC directive, it might determine that additional source
-# files need to be marked up to be compiled for OpenACC, which can then
-# be done in an additional transmute phase).
+# In this example, we run a transmute step after the DSL step.
 
 phases:
-  # Define three phases: a transmutation, then DSL, then another transmutation
+  # Define two phases: a DSL phase, then transmutation
   - dsl
   - transmute_after_dsl
-
-# Each section contains:
-# - a comment (to be logged during execution),
-# - PSyclone API (to select DSL or transmute).
-# - script_dir:  subdirectory (under optimisation/SITE) to find the scripts
-#   (atm transmute, psykal - but different names could be used).
-#
-# Then it contains a list of specifications to control which
-# script to run on which file. Each specification is a keyword or script
-# name, followed by a list of file names. The last matching specification
-# will be used, allowing to start with the most generic specification
-# (think global.py), but then overwriting this in following specifications.
-# Matching of filenames is done using simple substrings search on the full
-# path (i.e. no regex or wildcard - though that could easily be added).
-# This makes it easy to also select sub-directories etc) 
-
-# Fab will support to load several psyclone-info files. Later files will
-# overwrite settings (e.g. the phases to run), or add to the rules (i.e.
-# all rules will be appended to the list of rules to use, since last-rule
-# wins, this means a site can add its own psyclone-info file to
-# fine-tune the behaviour for certain files.
 
 dsl:
   comment: "PSylone DSL Phase"
@@ -59,15 +31,9 @@ dsl:
   # catch typos early)
   file_specific: \*
 
-  # An option that is not possible to use atm: Run one script on several
-  # files. ATM in lfric_atm, there are duplicated scripts
-  # (e.g. conv_comorph_alg, conv_gr_alg, aerosol_ukca_alg), which can
-  # be avoided with this.
-  no_omp.py: /a/b/file1.f90 some_directory
-
 transmute_after_dsl:
   # As above
-  comment: "Post-DSL phase"
+  comment: "Post-DSL transmute phase"
   api:
   script_dir: transmute
 
