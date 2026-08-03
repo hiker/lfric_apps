@@ -74,16 +74,8 @@ class LFRicAppsBase(LFRicBase):
         self._add_python_paths.append(
             self.lfric_apps_root / "interfaces" / "physics_schemes_interface" /
             "build" / "transmute_psytrans")
-        self._add_python_paths.append( self.lfric_apps_root / "interfaces" /
+        self._add_python_paths.append(self.lfric_apps_root / "interfaces" /
                                       "build")
-
-    @property
-    def lfric_apps_root(self) -> Path:
-        """
-        :returns: the path to the application root.
-        """
-        return self._lfric_apps_root
-
         self._dependency_info = DependencyInfo(*self.get_dependencies_info())
 
     @property

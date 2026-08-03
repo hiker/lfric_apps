@@ -9,6 +9,7 @@
 contained in the infrastructure directory.
 '''
 
+import argparse
 import logging
 from pathlib import Path
 import sys
@@ -226,6 +227,23 @@ class FabLFRicAtm(LFRicAppsBase):
         '''
         libs = ['shumlib', ]
         return libs + super().get_linker_flags()
+
+    def define_command_line_options(
+            self,
+            parser: Optional[argparse.ArgumentParser] = None
+            ) -> argparse.ArgumentParser:
+        '''
+        Overwrite to change the default of the psyclone-control
+        option to be the lfric_atm specific file.
+
+        :param parser: optional a pre-defined argument parser. If not
+            specified, a new instance will be created.
+        '''
+        parser = super().define_command_line_options(parser)
+
+        control = self.app_dir / "psyclone_control-lfric_atm.yaml"
+        parser.set_defaults(psyclone_control=[str(control)])
+        return parser
 
     def get_dependencies_info(self) -> Tuple[Optional[Path], list[str]]:
         """
