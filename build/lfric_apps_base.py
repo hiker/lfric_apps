@@ -66,16 +66,12 @@ class LFRicAppsBase(LFRicBase):
                          root_symbol=root_symbol)
 
         # Some transmute function will import helper functions from
-        # this path.
-        # TODO: until we upgrade lfric_core with a new version which
-        #       will allow us to use:
-        # self.add_python_path(self.lfric_apps_root / "interfaces" /
-
-        self._add_python_paths.append(
+        # these paths.
+        self.add_python_search_path(
             self.lfric_apps_root / "interfaces" / "physics_schemes_interface" /
             "build" / "transmute_psytrans")
-        self._add_python_paths.append(self.lfric_apps_root / "interfaces" /
-                                      "build")
+        self.add_python_search_path(self.lfric_apps_root / "interfaces" /
+                                    "build")
         self._dependency_info = DependencyInfo(*self.get_dependencies_info())
 
     @property
