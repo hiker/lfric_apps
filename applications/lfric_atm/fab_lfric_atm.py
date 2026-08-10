@@ -15,17 +15,16 @@ from pathlib import Path
 import sys
 from typing import cast, Iterable, List, Optional, Tuple, Union
 
-from fab.api import (AddFlags, Category, Compiler, Exclude, git_checkout,
+from fab.api import (AddFlags, Category, Compiler, Exclude,
                      grab_folder, Include)
 
 # We need to import the Apps base class:
-sys.path.insert(0, str(Path(__file__).parents[2] / "build"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "build"))
 
 from lfric_apps_base import LFRicAppsBase  # noqa: E402
 
 # These can only be done after the import of LFRicAppBase (which adds
 # the required directories from the core repo)
-from dependency_info import DependencyInfo  # noqa: E402
 from extract_list import ExtractList  # noqa: E402
 
 
@@ -53,12 +52,10 @@ def get_lfric_atm_compile_fortran_specific_flags(
 
     if fortran_compiler.suite == "intel-classic":
         no_omp = ["-qno-openmp"]
-        um_physics = ["-r8"]
         no_externals = ["-warn", "noexternals"]
         # Some SOCRATES functions do not currently declare interfaces
         # This avoids a warning-turned-error about missing interfaces
     elif fortran_compiler.suite == "cray":
-        um_physics = ["-s", "real64"]
         ovewrite_debug_optimisation = []
         if profile == "fast-debug":
             ovewrite_debug_optimisation = ["-O0", "-G0"]
@@ -104,37 +101,11 @@ def get_lfric_atm_compile_fortran_specific_flags(
             ]
     else:
         no_omp = ["-fno-openmp"]
-        # Most lfric_atm dependencies contain code with implicit lossy
-        # conversions and unused variables.
 
-        um_physics = ["-fdefault-real-8", "-Wno-error=conversion"]
     path_flags += [
         AddFlags(match='$output/science/um/atmosphere/'
                        'large_scale_precipitation/*',
                  flags=no_omp),
-        AddFlags(match="$output/science/*", flags=um_physics),
-        # jules and socrates are extracted in the science folder
-        AddFlags(match="$output/legacy/*", flags=um_physics),
-        AddFlags(match="$output/AC_assimilation/*", flags=um_physics),
-        AddFlags(match="$output/aerosols/*", flags=um_physics),
-        AddFlags(match="$output/atmosphere_service/*", flags=um_physics),
-        AddFlags(match="$output/boundary_layer/*", flags=um_physics),
-        AddFlags(match="$output/carbon/*", flags=um_physics),
-        AddFlags(match="$output/convection/*", flags=um_physics),
-        AddFlags(match="$output/diffusion_and_filtering/*", flags=um_physics),
-        AddFlags(match="$output/dynamics/*", flags=um_physics),
-        AddFlags(match="$output/dynamics_advection/*", flags=um_physics),
-        AddFlags(match="$output/electric/*", flags=um_physics),
-        AddFlags(match="$output/free_tracers/*", flags=um_physics),
-        AddFlags(match="$output/gravity_wave_drag/*", flags=um_physics),
-        AddFlags(match="$output/idealised/*", flags=um_physics),
-        AddFlags(match="$output/large_scale_cloud/*", flags=um_physics),
-        AddFlags(match="$output/large_scale_precipitation/*",
-                 flags=um_physics),
-        AddFlags(match="$output/physics_diagnostics/*", flags=um_physics),
-        AddFlags(match="$output/radiation_control/*", flags=um_physics),
-        AddFlags(match="$output/stochastic_physics/*", flags=um_physics),
-        AddFlags(match="$output/tracer_advection/*", flags=um_physics),
         AddFlags(match="$output/science/socrates/radiance_core/*",
                  flags=no_externals),
         AddFlags(match="$output/science/socrates/interface_core/*",
@@ -256,7 +227,6 @@ class FabLFRicAtm(LFRicAppsBase):
 
         """
         return self.lfric_apps_root / "dependencies.yaml", []
-
 
     def grab_files_step(self) -> None:
         """
