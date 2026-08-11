@@ -43,8 +43,13 @@ class Config(DefaultSiteConfig):
         compiler = tool_repo.get_tool(Category.FORTRAN_COMPILER, name)
 
         if not compiler.is_available:
-            compiler = tool_repo.get_tool(Category.FORTRAN_COMPILER,
-                                          f"mpif90-{name}")
+            try:
+                # There might not be a mpif90 tool, e.g.
+                # for Cray compilers
+                compiler = tool_repo.get_tool(Category.FORTRAN_COMPILER,
+                                              f"mpif90-{name}")
+            except KeyError:
+                return None
             if not compiler.is_available:
                 return None
 
@@ -81,7 +86,7 @@ class Config(DefaultSiteConfig):
         :param build_config: the Fab build configuration instance
         '''
         super().setup_cray(build_config)
-        ftn = self.get_fortran_compiler("ftn")
+        ftn = self.get_fortran_compiler("crayftn-ftn")
         if not ftn:
             return
 
