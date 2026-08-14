@@ -15,7 +15,7 @@ from fab.api import Exclude, git_checkout, Include
 
 from dependency_info import DependencyInfo
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fab")
 
 # We need to be able to import LFRicBase from the core
 # repository. Scan the command line arguments for --core
@@ -156,6 +156,11 @@ class LFRicAppsBase(LFRicBase):
             repo_infos = self.dependency_info.get_repo_info(repo)
 
             for repo_info in repo_infos:
+                if self.args.skip_checkout:
+                    logger.info(f"Skipping extraction of '{repo}' from "
+                                f"'{repo_info.source}' ")
+                    continue
+
                 logger.info(f"Extracting '{repo}' from '{repo_info.source}' "
                             f" to 'science/{repo}', "
                             f"revisions {repo_info.ref}")
