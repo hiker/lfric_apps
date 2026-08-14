@@ -50,12 +50,7 @@ def get_lfric_atm_compile_fortran_specific_flags(
     no_externals: List[str] = []
     path_flags: List[AddFlags] = []
 
-    if fortran_compiler.suite == "intel-classic":
-        no_omp = ["-qno-openmp"]
-        no_externals = ["-warn", "noexternals"]
-        # Some SOCRATES functions do not currently declare interfaces
-        # This avoids a warning-turned-error about missing interfaces
-    elif fortran_compiler.suite == "cray":
+    if fortran_compiler.suite == "cray":
         ovewrite_debug_optimisation = []
         if profile == "fast-debug":
             ovewrite_debug_optimisation = ["-O0", "-G0"]
