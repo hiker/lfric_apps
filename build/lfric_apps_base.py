@@ -11,9 +11,7 @@ from pathlib import Path
 import sys
 from typing import Iterable, Optional, Tuple, Union
 
-from fab.api import Exclude, git_checkout, Include
-
-from dependency_info import DependencyInfo
+from fab.api import DependencyInfo, Exclude, git_checkout, Include
 
 logger = logging.getLogger("fab")
 
