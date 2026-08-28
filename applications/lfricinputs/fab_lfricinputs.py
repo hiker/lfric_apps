@@ -9,6 +9,7 @@
 contained in the infrastructure directory.
 '''
 
+import argparse
 import logging
 import os
 from pathlib import Path
@@ -23,6 +24,7 @@ from fab.build_config import AddFlags
 sys.path.insert(0, str(Path(__file__).parents[2] / "build"))
 from lfric_apps_base import LFRicAppsBase  # noqa: E402
 
+logger = logging.getLogger('fab')
 
 class FabLFRicInputs(LFRicAppsBase):
     '''
@@ -35,30 +37,62 @@ class FabLFRicInputs(LFRicAppsBase):
         created.
     '''
 
-    def __init__(self, name: str, root_symbol: Union[str, List[str]]):
+    def __init__(self, name: str):
         this_file = Path(__file__).resolve()
         # Store the root of this apps for later
         self._this_root = this_file.parent
+
+        # The list of all binaries to compile here, must be
+        # set before calling super.__init__ (since it's used in the
+        # command line options).
+        self.all_binaries = ['lfric2um', 'scintelapi', 'um2lfric']
+
         super().__init__(name, app_dir=self._this_root)
-        self.set_root_symbol(root_symbol)
 
-    def define_preprocessor_flags_step(self):
-        """
-        Defines the preprocessor flags.
-        """
-        super().define_preprocessor_flags_step()
+    def define_command_line_options(
+            self,
+            parser: Optional[argparse.ArgumentParser] = None
+            ) -> argparse.ArgumentParser:
+        '''
+        This adds LFRic-inputs specific command line options to the base
+        class define_command_line_option. Currently, precision-related
+        options are added.
 
-        # for backward compatibility of building shumlib from source
-        path_flags = [AddFlags(match="$source/shumlib/*",
-                               flags=['-DSHUMLIB_LIBNAME=libshum',
-                                      '-I$output',
-                                      '-I$source/shumlib/common/src',
-                                      '-I$source/shumlib/'
-                                      'shum_thread_utils/src',
-                                      '-I$relative'],),
-                      ]
+        :param parser: optional a pre-defined argument parser.
 
-        self.add_preprocessor_flags(path_flags)
+        :returns: the argument parser with the LFRic specific options added.
+        '''
+        parser = super().define_command_line_options(parser)
+
+        group = parser.add_argument_group(
+            title="LFRic-Inputs",
+            description="Arguments to select the binaries to build. If no "
+                        "binary is specified, all three will be built." )
+
+        for binary in self.all_binaries:
+            group.add_argument(
+                f'--{binary}', action="store_true", default=False,
+                help=f"Compile '{binary}'.")
+        return parser
+
+    def handle_command_line_options(self,
+                                    parser: argparse.ArgumentParser) -> None:
+        '''
+        Analyses the parameter for specifying the binaries to compile.
+        Set the selected binaries as root symbols for Fab.
+
+        :param argparse.ArgumentParser parser: the argument parser.
+        '''
+        super().handle_command_line_options(parser)
+
+        binaries = []
+        for binary in self.all_binaries:
+            if getattr(self.args, binary):
+                binaries.append(binary)
+        if not binaries:
+            binaries = self.all_binaries
+        self.set_root_symbols(binaries)
+        logger.info(f"Compiling '{', '.join(binaries)}'.")
 
     def get_linker_flags(self) -> List[str]:
         '''
@@ -67,8 +101,7 @@ class FabLFRicInputs(LFRicAppsBase):
 
         :returns: list of flags for the linker.
         '''
-        libs = ['shumlib', ]
-        return libs + super().get_linker_flags()
+        return super().get_linker_flags() + ["shumlib"]
 
     def grab_files_step(self):
         """
@@ -86,12 +119,6 @@ class FabLFRicInputs(LFRicAppsBase):
         for dir in dirs:
             grab_folder(self.config, src=lfric_apps_root / dir, dst_label='')
 
-        # Copy the optimisation scripts into a separate directory if it exists
-        optimisation_dir = self._this_root / "optimisation"
-        if optimisation_dir.exists():
-            grab_folder(self.config, src=optimisation_dir,
-                        dst_label='optimisation')
-
     def get_rose_meta(self) -> Path:
         """
         :returns: The path to the rose meta data config file.
@@ -105,7 +132,8 @@ class FabLFRicInputs(LFRicAppsBase):
                      find_programs: bool = False
                      ) -> None:
         '''
-        The method adds lfric_inputs specific list of dependencies to ignore.
+        The method adds lfric_inputs specific list of dependencies to
+        shumlib to ignore.
 
         :param ignore_dependencies: Third party Fortran module names in
             USE statements, 'DEPENDS ON' files and modules to be ignored.
@@ -130,14 +158,14 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('fab')
     logger.setLevel(logging.DEBUG)
-    fab_lfric_inputs = FabLFRicInputs(
-        name="lfric_inputs",
-        root_symbol=['um2lfric', 'lfric2um', 'scintelapi'])
+
+    fab_lfric_inputs = FabLFRicInputs(name="lfric_inputs")
     fab_lfric_inputs.build()
+
+    # Rename binaries
     executable_folder_path = fab_lfric_inputs.config.project_workspace
-    os.rename(os.path.join(executable_folder_path, "um2lfric"),
-              os.path.join(executable_folder_path, "um2lfric.exe"))
-    os.rename(os.path.join(executable_folder_path, "lfric2um"),
-              os.path.join(executable_folder_path, "lfric2um.exe"))
-    os.rename(os.path.join(executable_folder_path, "scintelapi"),
-              os.path.join(executable_folder_path, "scintelapi.exe"))
+    for binary in fab_lfric_inputs.all_binaries:
+        bin_path = executable_folder_path / binary
+        if bin_path.exists():
+            logger.info(f"Renaming '{binary}' to '{binary}.exe'.")
+            bin_path.rename(executable_folder_path / f"{binary}.exe")
