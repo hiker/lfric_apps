@@ -13,7 +13,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from fab.api import DependencyInfo, Exclude, git_checkout, Include
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("fab")
 
 # We need to be able to import LFRicBase from the core
 # repository. Scan the command line arguments for --core
@@ -145,7 +145,7 @@ class LFRicAppsBase(LFRicBase):
         # Call site-specific updates, which allows usage of mirrors.
         self.site_config.update_repos(self.dependency_info)
 
-        for repo in self.dependency_info.get_repo_names():
+        for repo, repo_infos in self.dependency_info.items():
             if repo in ["lfric_apps", "lfric_core", "SimSys_Scripts"]:
                 # For now don't support checking out the apps or core repo
                 # (they must be already checked out), and ignore the
@@ -153,9 +153,12 @@ class LFRicAppsBase(LFRicBase):
                 logger.info(f"Ignoring repository '{repo}'.")
                 continue
 
-            repo_infos = self.dependency_info.get_repo_info(repo)
-
             for repo_info in repo_infos:
+                if self.args.skip_checkout:
+                    logger.info(f"Skipping extraction of '{repo}' from "
+                                f"'{repo_info.source}'.")
+                    continue
+
                 logger.info(f"Extracting '{repo}' from '{repo_info.source}' "
                             f" to 'science/{repo}', "
                             f"revisions {repo_info.ref}")
