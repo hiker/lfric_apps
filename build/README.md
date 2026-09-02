@@ -1,6 +1,6 @@
 # LFRic Apps Fab Build Scripts
 
-Make sure you have Fab version 2.0.1 or later installed (in addition to all
+Make sure you have Fab version 2.3 or later installed (in addition to all
 LFRic apps requirements of course).
 
 ## Setting up Site- and Platform-specific Settings
@@ -52,3 +52,15 @@ class FabGravityWave(PfUnitMixin, LFRicAppsBase):
 This will by default also build any tests in a ``unit-test`` directory.
 Additionally, a new command line option ``--no-test`` is added if
 building of the tests should be disabled.
+
+
+## Checking out LFRic Core
+
+The Fab scripts use an object-oriented design, and all application scripts
+are based on a base class in LFRic Core. It is therefore required to have
+LFRic core checked out before an application can be build (the scripts will
+check out all other dependencies from the ``dependencies.yaml`` file
+automatically). The script ``fetch_core.py`` does this. It takes two
+parameters, the path of the ``dependencies.yaml`` file, and the directory
+in which to check out the core repository. This directory will be created
+if it does not exist.
