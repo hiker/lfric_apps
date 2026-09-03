@@ -20,7 +20,7 @@ logger = logging.getLogger("fab")
 # (defaulting to the $LFRIC_CORE environment variable)
 # and add this to the Python search path:
 arg_parser = argparse.ArgumentParser(add_help=False)
-arg_parser.add_argument("--core", "-c", type=str,
+arg_parser.add_argument("--core", type=str,
                         help="Root of the LFRic core repository",
                         default="$LFRIC_CORE")
 args = arg_parser.parse_known_args()[0]   # Ignore element [1]=unknown args
